@@ -1,7 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import CANNON from 'cannon'
+import * as CANNON from 'cannon-es'
 
 /**
  * Base
@@ -115,14 +115,80 @@ const cubeTextureEnvironment = cubeTextureLoader.load([
  * Physics
  */
 const world = new CANNON.World()
+world.broadphase = new CANNON.SAPBroadphase(world)
+world.allowSleep = true
 world.gravity.set(0, -9.82, 0)
+
+const plasticMaterial = new CANNON.Material('plastic')
+
+const plasticAndPlasticContactMaterial = new CANNON.ContactMaterial(
+  plasticMaterial,
+  plasticMaterial,
+  {
+    friction: 0.005,
+    restitution: 0
+  }
+)
+world.addContactMaterial(plasticAndPlasticContactMaterial)
+
+const defaultMaterial = new CANNON.Material('default')
+
+const defaultContactMaterial = new CANNON.ContactMaterial(
+  defaultMaterial,
+  defaultMaterial,
+  {
+    friction: 0.1,
+    restitution: 0
+  }
+)
+
+world.defaultContactMaterial = defaultContactMaterial
+
+const boxShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5))
+const planeShape = new CANNON.Plane()
+
+const boxBodyLeft = new CANNON.Body({
+  mass: 1,
+  position: new CANNON.Vec3(-0.8, 1.3, 0.2),
+  shape: boxShape,
+  material: plasticMaterial
+})
+world.addBody(boxBodyLeft)
+
+const boxBodyCenter = new CANNON.Body({
+  mass: 1,
+  position: new CANNON.Vec3(0, 0, 0),
+  shape: boxShape,
+  material: plasticMaterial
+})
+world.addBody(boxBodyCenter)
+
+const boxBodyRight = new CANNON.Body({
+  mass: 1,
+  position: new CANNON.Vec3(0.8, 2, -0.5),
+  shape: boxShape,
+  material: plasticMaterial
+})
+world.addBody(boxBodyRight)
+
+const planeBody = new CANNON.Body({
+  mass: 0,
+  shape: planeShape,
+  material: plasticMaterial
+})
+planeBody.position.y = -1
+planeBody.quaternion.setFromAxisAngle(
+  new CANNON.Vec3(-1, 0, 0),
+  Math.PI * 0.5
+)
+world.addBody(planeBody)
 
 
 /**
  * Objects
  */
-const sphereGeometry = new THREE.SphereGeometry(0.5, 10, 10)
-const planeGeometry = new THREE.PlaneGeometry(10, 10)
+const boxGeometry = new THREE.BoxGeometry(1, 1, 1)
+const planeGeometry = new THREE.PlaneGeometry(100, 100)
 
 const materialLeftColor = '#f1faee'
 const materialCenterColor = '#a8dadc'
@@ -134,14 +200,17 @@ const materialCenter = new THREE.MeshStandardMaterial({ color: materialCenterCol
 const materialRight = new THREE.MeshStandardMaterial({ color: materialRightColor })
 const materialFloor = new THREE.MeshStandardMaterial({ color: '#1d3557' })
 
-const meshLeft = new THREE.Mesh(sphereGeometry, materialLeft)
+const meshLeft = new THREE.Mesh(boxGeometry, materialLeft)
 meshLeft.position.x = -1.60
+meshLeft.body = boxBodyLeft
 
-const meshCenter = new THREE.Mesh(sphereGeometry, materialCenter)
+const meshCenter = new THREE.Mesh(boxGeometry, materialCenter)
 meshCenter.position.x = 0
+meshCenter.body = boxBodyCenter
 
-const meshRight = new THREE.Mesh(sphereGeometry, materialRight)
+const meshRight = new THREE.Mesh(boxGeometry, materialRight)
 meshRight.position.x = 1.60
+meshRight.body = boxBodyRight
 
 const meshFloor = new THREE.Mesh(planeGeometry, materialFloor)
 meshFloor.rotation.x = -Math.PI * 0.5
@@ -163,9 +232,10 @@ let currentIntersect = null
  */
 
 // highlight item on / off returning back to its original color
-let isActive = []
+/* let isActive = []
 
 window.addEventListener('click', () => {
+  // currentIntersect is being set in the tick function on each frame
   if (currentIntersect) {
     console.log('intersect got a click', currentIntersect)
 
@@ -187,6 +257,24 @@ window.addEventListener('click', () => {
       isActive = isActive.filter((i) => i !== currentIntersect.object)
     }
   }
+}) */
+
+// click on item to move it applying a forze using physics
+window.addEventListener('click', () => {
+  raycaster.setFromCamera(mouse, camera)
+  const raycastIntersects = raycaster.intersectObjects(raycastTargets)
+
+  if (raycastIntersects.length) {
+    const currentIntersect = raycastIntersects[0]
+    const { object, point } = currentIntersect
+
+    const forceDirection = new THREE.Vector3().subVectors(object.position, camera.position).normalize().multiplyScalar(150)
+
+    const forcePoint = new THREE.Vector3().subVectors(point, object.position)
+
+    object.body.applyForce(new CANNON.Vec3().copy(forceDirection), new CANNON.Vec3().copy(forcePoint))
+  }
+  
 })
 
 
@@ -194,32 +282,35 @@ window.addEventListener('click', () => {
  * Animate
  */
 const clock = new THREE.Clock()
+let oldElapsedTime = 0
 
 const tick = () =>
 {
-  const elapsedTime = clock.getElapsedTime()  
+  const elapsedTime = clock.getElapsedTime()
+  const deltaTime = elapsedTime - oldElapsedTime
+  oldElapsedTime = elapsedTime
 
   //Objects animations
   /* meshLeft.rotation.y = elapsedTime * 0.5
   meshCenter.rotation.y = elapsedTime * 0.5
   meshRight.rotation.y = elapsedTime * 0.5 */
 
-  //Raycast
-  raycaster.setFromCamera(mouse, camera)
-  const raycastIntersects = raycaster.intersectObjects(raycastTargets)
+  // Raycast to iterate over elements and assign a property if hovered, if not returns to its original state
+  // executes on each frame
+  /* raycaster.setFromCamera(mouse, camera)
+  const raycastIntersects = raycaster.intersectObjects(raycastTargets) */
 
-  // iterate over elements and assign a property if hovered, if not returns to its original state
   /* for (const target of raycastTargets) {
-    target.material.color.set('#0000ff')
+    target.material.color.set('#0000ff') // original color
     // add function here
   }
   for (const intersect of raycastIntersects) {
-    intersect.object.material.color.set('#e63946')
+    intersect.object.material.color.set('#e63946') // color if intersects
     // add function here
   } */
 
-  // mouse enter / mouse leave  
-  if (raycastIntersects.length) {
+  // mouse enter / mouse leave , will change the color of the hovered element but wont execute on each frame
+  /* if (raycastIntersects.length) {
     if (currentIntersect === null) {
       console.log('mouse enter')
       currentIntersect = raycastIntersects[0]
@@ -231,7 +322,19 @@ const tick = () =>
       currentIntersect = null
       // add function here
     }
-  }
+  } */
+
+  // Update physics world
+  world.step(1/60 /** 60FPS */, deltaTime /** Delta Time */, 3 /** Iterations */)
+
+  // Apply physics to objects 
+  meshLeft.position.copy(boxBodyLeft.position)
+  meshCenter.position.copy(boxBodyCenter.position)
+  meshRight.position.copy(boxBodyRight.position)
+
+  meshLeft.quaternion.copy(boxBodyLeft.quaternion)
+  meshCenter.quaternion.copy(boxBodyCenter.quaternion)
+  meshRight.quaternion.copy(boxBodyRight.quaternion)
   
   // Update controls
   controls.update()

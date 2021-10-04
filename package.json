@@ -9,7 +9,7 @@
         "@babel/core": "^7.14.6",
         "@babel/preset-env": "^7.14.7",
         "babel-loader": "^8.2.2",
-        "cannon": "^0.6.2",
+        "cannon-es": "^0.18.0",
         "three": "^0.130.0"
     },
     "devDependencies": {

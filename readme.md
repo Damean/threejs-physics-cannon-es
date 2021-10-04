@@ -1,7 +1,16 @@
-# Three.js Journey - Webpack Starter Project
-This starter project was created by Bruno Simon and it is part of the Three.js Journey Course
+# Three.js - Webpack Starter Project
+
+This starter project is based on the starter project created by Bruno Simon, the creator of the Three.js Journey Course.
 
 You can find the course here 👉 [https://threejs-journey.xyz/](https://threejs-journey.xyz/)
+
+This project includes some tweaks like:
+
+-Raycasts to select 3d elements and apply custom transformations/events
+-Raycast allowing hover effects on 3d elements
+-Physics using cannon-es
+-Custom physics material definition
+-Click event to apply forze on objects
 
 ## Setup
 Download [Node.js](https://nodejs.org/en/download/).
@@ -18,7 +27,7 @@ npm run dev
 npm run build
 ```
 
-## You can now start coding
+## File distribution
 
 - The JS is located in src/script.js
 - The HTML is located in src/index.html
