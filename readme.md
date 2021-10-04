@@ -1,16 +1,12 @@
-# Three.js - Webpack Starter Project
+# Three.js Physics Test
 
-This starter project is based on the starter project created by Bruno Simon, the creator of the Three.js Journey Course.
+This project implements cannon-es and three.js to move objects in a 3d space by applying physics
 
-You can find the course here 👉 [https://threejs-journey.xyz/](https://threejs-journey.xyz/)
+It includes:
 
-This project includes some tweaks like:
-
-- Raycasts to select 3d elements and apply custom transformations/events
-- Raycast allowing hover effects on 3d elements
-- Physics using cannon-es
-- Custom physics material definition
 - Click event to apply forze on objects
+- Raycast to find a point on the 3d object physical body and apply forze to that point
+- Custom physics material definition
 
 ## Setup
 Download [Node.js](https://nodejs.org/en/download/).
