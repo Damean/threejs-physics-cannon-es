@@ -6,11 +6,11 @@ You can find the course here 👉 [https://threejs-journey.xyz/](https://threejs
 
 This project includes some tweaks like:
 
--Raycasts to select 3d elements and apply custom transformations/events
--Raycast allowing hover effects on 3d elements
--Physics using cannon-es
--Custom physics material definition
--Click event to apply forze on objects
+- Raycasts to select 3d elements and apply custom transformations/events
+- Raycast allowing hover effects on 3d elements
+- Physics using cannon-es
+- Custom physics material definition
+- Click event to apply forze on objects
 
 ## Setup
 Download [Node.js](https://nodejs.org/en/download/).
